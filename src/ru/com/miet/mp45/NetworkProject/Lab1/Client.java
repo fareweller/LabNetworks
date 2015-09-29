@@ -1,102 +1,104 @@
 package ru.com.miet.mp45.NetworkProject.Lab1;
 
+import javafx.util.Pair;
 import java.io.IOException;
 import java.net.*;
+import java.util.function.Predicate;
 
 /**
  * Created by BALALAIKA on 24.09.2015.
  */
-public class Client extends Thread {
-    private DatagramSocket socket = null;
+public class Client extends ChatActor {
     private InetSocketAddress serverAddress = null;
-    private int serverPort = 0;
-    private int clientPort = 0;
-    private boolean establishedConnection = false;
-    private boolean isRunning = false;
+    private boolean established = false;
 
-    public Client(int port) throws SocketException {
-        socket = new DatagramSocket(port);
-        clientPort = port;
-        isRunning = true;
+    public Client(int port) throws UnknownHostException, SocketException{
+        super(port);
     }
 
-    public void tryConnectTo(InetAddress address, int port) throws IOException{
+    public void connectToServer(InetAddress address, int port) throws IOException {
         serverAddress = new InetSocketAddress(address, port);
-        sendMessage(new NetworkMessage(NetworkMessage.TypeOfMessage.REQUESTCONNECTION,
-                                       "Client", serverAddress));
+        SendMessage(serverAddress, new NetworkMessage(NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Client", 0));
     }
 
-    public void sendStr(String str) throws IOException {
-        if (!establishedConnection)
-            ;//throwing exception
-        else {
-            sendMessage(new NetworkMessage(NetworkMessage.TypeOfMessage.MESSAGE,
-                                           str, serverAddress));
+    public void sendString(String str) {
+        if (established && serverAddress != null) {
+            try {
+                SendMessage(serverAddress, new NetworkMessage(NetworkMessage.TypeOfMessage.MESSAGE, str, 0));
+            }
+            catch (IOException e) {
+
+            }
         }
     }
 
-    public void disconnectFromServer() throws IOException {
-        sendMessage(new NetworkMessage(NetworkMessage.TypeOfMessage.DISCONNECT,
-                                       "", new InetSocketAddress(socket.getInetAddress(), clientPort)));
-        establishedConnection = false;
-    }
-
-    public void closeClient() {
-        socket.close();
-        isRunning = false;
+    @Override
+    public void executeHeadMessage() {
+        if (!receivedMessages.isEmpty()) {
+            Pair<NetworkMessage, InetSocketAddress> message = receivedMessages.pollFirst();
+            if (message.getKey().getType() != NetworkMessage.TypeOfMessage.ACK) {
+                try {
+                    SendMessage(message.getValue(), new NetworkMessage(NetworkMessage.TypeOfMessage.ACK, String.valueOf(message.getKey().getMessageId()), 0));
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            switch (message.getKey().getType()) {
+                case REQUESTCONNECTION:
+                    if (message.getKey().getMessage().equals("Success")) {
+                        System.out.println("You've connected");
+                        established = true;
+                    } else {
+                        if (message.getKey().getMessage().equals("You've banned")) {
+                            serverAddress = null;
+                            established = false;
+                        }
+                        System.out.println(message.getKey().getMessage());
+                    }
+                    break;
+                case MESSAGE:
+                    System.out.println(message.getKey().getMessage());
+                    break;
+                case ACK:
+                    final long id = Long.parseLong(message.getKey().getMessage());
+                    sendingMessages.removeIf(new Predicate<Pair<NetworkMessage, InetSocketAddress>>() {
+                        @Override
+                        public boolean test(Pair<NetworkMessage, InetSocketAddress> networkMessageInetSocketAddressPair) {
+                            return networkMessageInetSocketAddressPair.getKey().getMessageId() == id;
+                        }
+                    });
+                    break;
+            }
+        }
     }
 
     @Override
-    public void run() {
-        while (isRunning) {
+    public void sendFirstMessage() {
+        if (!sendingMessages.isEmpty()) {
             try {
-                receiveAndExecuteMessage();
+                Pair<NetworkMessage, InetSocketAddress> message = sendingMessages.first();
+
+                if (established && serverAddress.equals(message.getValue()) ||
+                    message.getKey().getType() == NetworkMessage.TypeOfMessage.REQUESTCONNECTION && serverAddress.equals(message.getValue())) {
+                    DatagramPacket sendPacket =
+                            new DatagramPacket(message.getKey().getBytes(), message.getKey().getBytes().length, message.getValue());
+                    socket.send(sendPacket);
+
+                    if (message.getKey().getType() == NetworkMessage.TypeOfMessage.ACK) {
+                        final long id = message.getKey().getMessageId();
+                        sendingMessages.removeIf(new Predicate<Pair<NetworkMessage, InetSocketAddress>>() {
+                            @Override
+                            public boolean test(Pair<NetworkMessage, InetSocketAddress> networkMessageInetSocketAddressPair) {
+                                return networkMessageInetSocketAddressPair.getKey().getMessageId() == id;
+                            }
+                        });
+                    }
+                }
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public void stopClient() {
-        isRunning = false;
-    }
-
-    private void sendMessage(NetworkMessage msg) throws IOException {
-        if (establishedConnection || msg.getType() == NetworkMessage.TypeOfMessage.REQUESTCONNECTION) {
-            DatagramPacket sendPacket = new DatagramPacket(msg.getBytes(), msg.getBytes().length, serverAddress);
-            socket.send(sendPacket);
-        }
-    }
-
-    private void receiveAndExecuteMessage() throws IOException {
-        byte[] bytes = new byte[NetworkMessage.sizeOfMessage];
-        DatagramPacket receivePacket = new DatagramPacket(bytes, bytes.length);
-        socket.receive(receivePacket);
-        NetworkMessage msg = new NetworkMessage(bytes);
-        switch (msg.getType()) {
-            case MESSAGE:
-                System.out.println(msg.getMessage() + " from " + msg.getSenderAddress().toString());
-                break;
-            case DISCONNECT:
-
-                break;
-            case REQUESTCONNECTION:
-                if (msg.getMessage().equals("Success")) {
-                    System.out.println("You're connected");
-                    establishedConnection = true;
-                }
-                else {
-                    establishedConnection = false;
-                    System.out.println(msg.getMessage());
-                }
-
-                break;
-            case NEWCLIENT:
-                break;
-            case CLOSESERVER:
-                establishedConnection = false;
-                break;
         }
     }
 }

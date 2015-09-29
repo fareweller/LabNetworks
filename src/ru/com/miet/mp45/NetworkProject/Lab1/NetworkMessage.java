@@ -23,7 +23,7 @@ public class NetworkMessage {
         CONNECT(4),
         NEWCLIENT(5),
         CLOSESERVER(6),
-        TEST(7);
+        ACK(7);
         private final int value;
         private TypeOfMessage(int value) {
             this.value = value;
@@ -35,22 +35,20 @@ public class NetworkMessage {
     public final static int sizeOfMessage = 512;
     private byte[] bytes = null;
     private String message = null;
-    private InetSocketAddress senderAddress;
-    private TypeOfMessage typeOfMessage;
+    private TypeOfMessage typeOfMessage = null;
+    private long messageId = 0;
 
-    public NetworkMessage(TypeOfMessage type, String msg, InetSocketAddress address) throws IOException {
+    public NetworkMessage(TypeOfMessage type, String msg, long id) throws IOException {
         typeOfMessage = type;
         message = msg;
-        senderAddress = address;
+        messageId = id;
         bytes = new byte[sizeOfMessage];
 
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream(sizeOfMessage);
         byteStream.write(ByteBuffer.allocate(4).putInt(type.getValue()).array());
         byteStream.write(ByteBuffer.allocate(4).putInt(message.getBytes(Charset.forName("UTF-8")).length).array());
         byteStream.write(message.getBytes(Charset.forName("UTF-8")));
-        byteStream.write(ByteBuffer.allocate(4).putInt(senderAddress.getHostName().getBytes(Charset.forName("UTF-8")).length).array());
-        byteStream.write(senderAddress.getHostName().getBytes(Charset.forName("UTF-8")));
-        byteStream.write(ByteBuffer.allocate(4).putInt(senderAddress.getPort()).array());
+        byteStream.write(ByteBuffer.allocate(8).putLong(id).array());
         System.arraycopy(byteStream.toByteArray(), 0, bytes, 0, byteStream.size());
     }
 
@@ -70,19 +68,9 @@ public class NetworkMessage {
         byteStream.read(bytes, off, len);
         message = new String(bytes, off, len, StandardCharsets.UTF_8);
 
-        off += len;
-        byteStream.read(bytes, off, 4);
-        len = ByteBuffer.wrap(bytes, off, 4).getInt();
-
         off += 4;
-        byteStream.read(bytes, off, len);
-        String host = new String(bytes, off, len, StandardCharsets.UTF_8);
-
-        off += len;
-        byteStream.read(bytes, off, 4);
-        int port = ByteBuffer.wrap(bytes, off, 4).getInt();
-
-        senderAddress = new InetSocketAddress(host, port);
+        byteStream.read(bytes, off, 8);
+        messageId = ByteBuffer.wrap(bytes, off, 8).getLong();
     }
 
     public byte[] getBytes() {
@@ -97,7 +85,12 @@ public class NetworkMessage {
         return message;
     }
 
-    public InetSocketAddress getSenderAddress() {
-        return senderAddress;
+    public long getMessageId() {
+        return messageId;
+    }
+
+    @Override
+    public boolean equals(Object msg) {
+        return this.messageId == ((NetworkMessage)msg).getMessageId();
     }
 }

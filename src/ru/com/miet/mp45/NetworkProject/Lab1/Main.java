@@ -11,20 +11,17 @@ public class Main {
     public static void main(String[] argv) throws IOException, InterruptedException{
         Server server = new Server(44444);
         Client client = new Client(55555);
-        server.start();
-        client.start();
-        client.tryConnectTo(InetAddress.getByName("localhost"), 44444);
-
-        Thread.sleep(1000);
+        (new Thread(server)).start();
+        (new Thread(client)).start();
+        client.connectToServer(InetAddress.getLocalHost(), 44444);
 
         String msg = "";
         Scanner sc = new Scanner(System.in);
         while (!msg.equals("exit")) {
             msg = sc.nextLine();
-            client.sendStr(msg);
+            client.sendString(msg);
         }
-        client.disconnectFromServer();
-        client.stopClient();
-        server.stopServer();
+        client.turnOff();
+        server.turnOff();
     }
 }
