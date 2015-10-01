@@ -15,9 +15,9 @@ public abstract class ChatActor implements Runnable {
     protected boolean isRunning = false;
     protected Map<InetSocketAddress, String> clients = null;
 
-    protected TreeSet<Pair<NetworkMessage, InetSocketAddress>> receivedMessages = null;
+    protected TreeSet<Pair<NetworkMessage, InetSocketAddress>> executedMessages = null;
     protected TreeSet<Pair<NetworkMessage, InetSocketAddress>> sendingMessages = null;
-
+    protected TreeSet<Pair<NetworkMessage, InetSocketAddress>> receivedMessages = null;
     protected int messageCnt = 0;
 
     protected Timer timer = null;
@@ -27,54 +27,17 @@ public abstract class ChatActor implements Runnable {
     public ChatActor(int port) throws UnknownHostException, SocketException{
         socket = new DatagramSocket(port, InetAddress.getLocalHost());
         this.port = port;
-        clients = new TreeMap<InetSocketAddress, String>(new Comparator<InetSocketAddress>() {
-            @Override
-            public int compare(InetSocketAddress o1, InetSocketAddress o2) {
-                return o1.getHostString().compareTo(o2.getHostString());
-            }
-        });
-
-        receivedMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
-            @Override
-            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
-                return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
-            }
-        });
-        sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
-            @Override
-            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
-                return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
-            }
-        });
-
         isRunning = true;
-        executeTask = new TimerTask() {
-            @Override
-            public void run() {
-                executeHeadMessage();
-            }
-        };
-        sendTask = new TimerTask() {
-            @Override
-            public void run() {
-                sendFirstMessage();
-            }
-        };
-
-        timer = new Timer();
-        timer.schedule(executeTask, 100, 100);
-        timer.schedule(sendTask, 100, 100);
     }
 
     protected abstract void executeHeadMessage();
     protected abstract void sendFirstMessage();
 
-    protected void SendMessage(InetSocketAddress address, NetworkMessage msg) throws IOException {
+    protected void SendMessage(InetSocketAddress address, NetworkMessage.TypeOfMessage type, String msg) throws IOException {
         messageCnt++;
-        NetworkMessage message = new NetworkMessage(msg.getType(), msg.getMessage(), messageCnt);
+        NetworkMessage message = new NetworkMessage(type, msg, messageCnt);
         sendingMessages.add(new Pair<NetworkMessage, InetSocketAddress>(message, address));
     }
-
     public void turnOff() {
         isRunning = false;
         timer.cancel();

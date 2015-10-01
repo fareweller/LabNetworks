@@ -15,12 +15,63 @@ public class Server extends ChatActor {
 
     public Server(int port) throws UnknownHostException, SocketException {
         super(port);
+
+        sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        receivedMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        executedMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        executeTask = new TimerTask() {
+            @Override
+            public void run() {
+                executeHeadMessage();
+            }
+        };
+        sendTask = new TimerTask() {
+            @Override
+            public void run() {
+                sendFirstMessage();
+            }
+        };
+
+        clients = new TreeMap<InetSocketAddress, String>(new Comparator<InetSocketAddress>() {
+            @Override
+            public int compare(InetSocketAddress o1, InetSocketAddress o2) {
+                return o1.getHostString().compareTo(o2.getHostString());
+            }
+        });
         bannedClients = new TreeMap<InetSocketAddress, String>(new Comparator<InetSocketAddress>() {
             @Override
             public int compare(InetSocketAddress o1, InetSocketAddress o2) {
                 return o1.getHostString().compareTo(o2.getHostString());
             }
         });
+
+        timer = new Timer();
+        timer.schedule(executeTask, 100, 100);
+        timer.schedule(sendTask, 100, 100);
     }
 
     @Override
@@ -29,24 +80,26 @@ public class Server extends ChatActor {
             Pair<NetworkMessage, InetSocketAddress> message = receivedMessages.pollFirst();
             if (message.getKey().getType() != NetworkMessage.TypeOfMessage.ACK) {
                 try {
-                    SendMessage(message.getValue(), new NetworkMessage(NetworkMessage.TypeOfMessage.ACK, String.valueOf(message.getKey().getMessageId()), 0));
+                    SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.ACK, String.valueOf(message.getKey().getMessageId()));
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                 }
             }
+            if (executedMessages.contains(message))
+                return;
             switch (message.getKey().getType()) {
                 case REQUESTCONNECTION:
                     try {
                         if (!bannedClients.containsKey(message.getValue())) {
                             if (!clients.containsKey(message.getValue())) {
-                                SendMessage(message.getValue(), new NetworkMessage(NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Success", 0));
+                                SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Success");
                                 clients.put(message.getValue(), message.getKey().getMessage());
                             } else {
-                                SendMessage(message.getValue(), new NetworkMessage(NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've already connected", 0));
+                                SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've already connected");
                             }
                         } else {
-                            SendMessage(message.getValue(), new NetworkMessage(NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've banned!!!", 0));
+                            SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've banned!!!");
                         }
                     }
                     catch (IOException e) {
@@ -56,7 +109,7 @@ public class Server extends ChatActor {
                 case MESSAGE:
                     for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
                         try {
-                            SendMessage(entry.getKey(), message.getKey());
+                            SendMessage(entry.getKey(), message.getKey().getType(), message.getKey().getMessage());
                         }
                         catch (IOException e) {
 
@@ -64,8 +117,7 @@ public class Server extends ChatActor {
                     }
                     break;
                 case ACK:
-                    String str = message.getKey().getMessage();
-                    final long id = Long.parseLong(str);
+                    final long id = Long.parseLong(message.getKey().getMessage());
                     sendingMessages.removeIf(new Predicate<Pair<NetworkMessage, InetSocketAddress>>() {
                         @Override
                         public boolean test(Pair<NetworkMessage, InetSocketAddress> networkMessageInetSocketAddressPair) {
@@ -74,6 +126,7 @@ public class Server extends ChatActor {
                     });
                     break;
             }
+            executedMessages.add(message);
         }
     }
 

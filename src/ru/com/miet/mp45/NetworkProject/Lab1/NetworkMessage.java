@@ -3,6 +3,7 @@ package ru.com.miet.mp45.NetworkProject.Lab1;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -88,9 +89,15 @@ public class NetworkMessage {
     public long getMessageId() {
         return messageId;
     }
-
+/*
     @Override
     public boolean equals(Object msg) {
-        return this.messageId == ((NetworkMessage)msg).getMessageId();
+        if (msg == this)
+            return true;
+        if (msg == null || this.getClass() != msg.getClass())
+            return false;
+        NetworkMessage msg1 = (NetworkMessage)msg;
+        return this.messageId == msg1.getMessageId();
     }
+*/
 }
