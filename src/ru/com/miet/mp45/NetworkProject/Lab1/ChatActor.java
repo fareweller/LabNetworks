@@ -38,6 +38,7 @@ public abstract class ChatActor implements Runnable {
         NetworkMessage message = new NetworkMessage(type, msg, messageCnt);
         sendingMessages.add(new Pair<NetworkMessage, InetSocketAddress>(message, address));
     }
+
     public void turnOff() {
         isRunning = false;
         timer.cancel();

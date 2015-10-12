@@ -95,6 +95,7 @@ public class Server extends ChatActor {
                             if (!clients.containsKey(message.getValue())) {
                                 SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Success");
                                 clients.put(message.getValue(), message.getKey().getMessage());
+
                             } else {
                                 SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've already connected");
                             }
