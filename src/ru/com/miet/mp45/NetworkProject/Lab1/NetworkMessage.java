@@ -89,15 +89,4 @@ public class NetworkMessage {
     public long getMessageId() {
         return messageId;
     }
-/*
-    @Override
-    public boolean equals(Object msg) {
-        if (msg == this)
-            return true;
-        if (msg == null || this.getClass() != msg.getClass())
-            return false;
-        NetworkMessage msg1 = (NetworkMessage)msg;
-        return this.messageId == msg1.getMessageId();
-    }
-*/
 }

@@ -1,5 +1,7 @@
 package ru.com.miet.mp45.NetworkProject.Lab1;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.util.Pair;
 
 import java.io.IOException;
@@ -13,6 +15,7 @@ public abstract class ChatActor implements Runnable {
     protected DatagramSocket socket = null;
     protected int port = 0;
     protected boolean isRunning = false;
+    protected boolean isReceiving = false;
     protected Map<InetSocketAddress, String> clients = null;
 
     protected TreeSet<Pair<NetworkMessage, InetSocketAddress>> executedMessages = null;
@@ -28,10 +31,12 @@ public abstract class ChatActor implements Runnable {
         socket = new DatagramSocket(port, InetAddress.getLocalHost());
         this.port = port;
         isRunning = true;
+        isReceiving = true;
     }
 
     protected abstract void executeHeadMessage();
     protected abstract void sendFirstMessage();
+    public abstract void executeAll() throws IOException;
 
     protected void SendMessage(InetSocketAddress address, NetworkMessage.TypeOfMessage type, String msg) throws IOException {
         messageCnt++;
@@ -39,7 +44,8 @@ public abstract class ChatActor implements Runnable {
         sendingMessages.add(new Pair<NetworkMessage, InetSocketAddress>(message, address));
     }
 
-    public void turnOff() {
+    public void turnOff() throws IOException {
+        executeAll();
         isRunning = false;
         timer.cancel();
         socket.close();
@@ -52,8 +58,10 @@ public abstract class ChatActor implements Runnable {
                 byte[] bytes = new byte[NetworkMessage.sizeOfMessage];
                 DatagramPacket receivePacket = new DatagramPacket(bytes, bytes.length);
                 socket.receive(receivePacket);
-                receivedMessages.add(new Pair<NetworkMessage, InetSocketAddress>(new NetworkMessage(bytes),
-                        new InetSocketAddress(receivePacket.getAddress(), receivePacket.getPort())));
+                Pair<NetworkMessage, InetSocketAddress> msg = new Pair<NetworkMessage, InetSocketAddress>(new NetworkMessage(bytes),
+                        new InetSocketAddress(receivePacket.getAddress(), receivePacket.getPort()));
+                if (isReceiving || msg.getKey().getType() == NetworkMessage.TypeOfMessage.ACK)
+                    receivedMessages.add(msg);
             }
             catch (IOException e) {
 

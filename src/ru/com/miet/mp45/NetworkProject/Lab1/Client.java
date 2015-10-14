@@ -1,6 +1,11 @@
 package ru.com.miet.mp45.NetworkProject.Lab1;
 
+import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.util.Pair;
+import ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.ClientGui;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -11,13 +16,55 @@ import java.util.function.Predicate;
  */
 public class Client extends ChatActor {
     private InetSocketAddress serverAddress = null;
-    private boolean established = false;
+    private BooleanProperty notConnected = new SimpleBooleanProperty(true);
+    private ClientGui clientGui = null;
 
-    public Client(int port) throws UnknownHostException, SocketException{
+    public Client(int port, ClientGui gui) throws UnknownHostException, SocketException{
         super(port);
+        clientGui = gui;
     }
 
-    public void connectToServer(InetAddress address, int port) throws IOException {
+    public void sendMessageToGUI(final String message) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                clientGui.getReceivedMessaged().add(message);
+            }
+        });
+        //System.out.println(message);
+    }
+
+    public void addClientToGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                clientGui.getConnectedClients().add(name);
+            }
+        });
+        //System.out.println(name + " has been connected");
+    }
+
+    public void removeClientFromGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                clientGui.getConnectedClients().removeIf(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return s.equals(name);
+                    }
+                });
+            }
+        });
+
+        System.out.println(name + " has been disconnected");
+    }
+
+    public void connectToServer(InetAddress address, int port, String name) throws IOException {
+
         serverAddress = new InetSocketAddress(address, port);
 
         sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
@@ -52,9 +99,9 @@ public class Client extends ChatActor {
             public void run() {
                 executeHeadMessage();
             }
-        };
+    };
         sendTask = new TimerTask() {
-            @Override
+        @Override
             public void run() {
                 sendFirstMessage();
             }
@@ -70,11 +117,28 @@ public class Client extends ChatActor {
         timer = new Timer();
         timer.schedule(executeTask, 100, 100);
         timer.schedule(sendTask, 100, 100);
-        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Client");
+        isReceiving = true;
+        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.REQUESTCONNECTION, name);
+    }
+
+    @Override
+    public void executeAll() throws IOException {
+        if (notConnected.getValue())
+            return;
+        notConnected.setValue(false);
+        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.DISCONNECT, "");
+        isReceiving = false;
+        timer.cancel();
+        timer = null;
+        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
+        serverAddress = null;
+        sendingMessages = null;
+        receivedMessages = null;
+        executedMessages = null;
     }
 
     public void sendString(String str) {
-        if (established && serverAddress != null) {
+        if (!notConnected.getValue() && serverAddress != null) {
             try {
                 SendMessage(serverAddress, NetworkMessage.TypeOfMessage.MESSAGE, str);
             }
@@ -96,13 +160,14 @@ public class Client extends ChatActor {
                     e.printStackTrace();
                 }
             }
-            if (executedMessages.contains(message))
+            if (executedMessages.contains(message)) {
                 return;
+            }
             switch (message.getKey().getType()) {
                 case REQUESTCONNECTION:
                     if (message.getKey().getMessage().equals("Success")) {
-                        System.out.println("You've connected");
-                        established = true;
+                        sendMessageToGUI("You've connected");
+                        notConnected.setValue(false);
                     } else {
                         if (message.getKey().getMessage().equals("You've banned")) {
                             serverAddress = null;
@@ -111,13 +176,19 @@ public class Client extends ChatActor {
                             executedMessages = null;
                             clients = null;
                             timer.cancel();
-                            established = false;
+                            notConnected.setValue(true);
                         }
-                        System.out.println(message.getKey().getMessage());
+                        sendMessageToGUI(message.getKey().getMessage());
                     }
                     break;
+                case CONNECT:
+                    addClientToGUIList(message.getKey().getMessage());
+                    break;
+                case DISCONNECT:
+                    removeClientFromGUIList(message.getKey().getMessage());
+                    break;
                 case MESSAGE:
-                    System.out.println(message.getKey().getMessage());
+                    sendMessageToGUI(message.getKey().getMessage());
                     break;
                 case ACK:
                     final long id = Long.parseLong(message.getKey().getMessage());
@@ -139,7 +210,7 @@ public class Client extends ChatActor {
             try {
                 Pair<NetworkMessage, InetSocketAddress> message = sendingMessages.first();
 
-                if (established && serverAddress.equals(message.getValue()) ||
+                if (!notConnected.getValue() && serverAddress.equals(message.getValue()) ||
                     message.getKey().getType() == NetworkMessage.TypeOfMessage.REQUESTCONNECTION && serverAddress.equals(message.getValue())) {
                     DatagramPacket sendPacket =
                             new DatagramPacket(message.getKey().getBytes(), message.getKey().getBytes().length, message.getValue());
@@ -160,5 +231,9 @@ public class Client extends ChatActor {
                 e.printStackTrace();
             }
         }
+    }
+
+    public BooleanProperty isNotConnected() {
+        return notConnected;
     }
 }

@@ -10,10 +10,11 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] argv) throws IOException, InterruptedException{
         Server server = new Server(44444);
-        Client client = new Client(55555);
+        //Client client = new Client(55555);
         (new Thread(server)).start();
+        /*
         (new Thread(client)).start();
-        client.connectToServer(InetAddress.getLocalHost(), 44444);
+        client.connectToServer(InetAddress.getLocalHost(), 44444, "ddd");
 
         String msg = "";
         Scanner sc = new Scanner(System.in);
@@ -22,6 +23,6 @@ public class Main {
             client.sendString(msg);
         }
         client.turnOff();
-        server.turnOff();
+        server.turnOff();*/
     }
 }

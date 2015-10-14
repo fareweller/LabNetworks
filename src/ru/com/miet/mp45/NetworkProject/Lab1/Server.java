@@ -75,6 +75,21 @@ public class Server extends ChatActor {
     }
 
     @Override
+    public void executeAll() throws IOException {
+        for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
+            SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.DISCONNECT, "Server");
+        }
+        isReceiving = false;
+        timer.cancel();
+        timer = null;
+        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
+
+        sendingMessages = null;
+        receivedMessages = null;
+        executedMessages = null;
+    }
+
+    @Override
     public void executeHeadMessage() {
         if (!receivedMessages.isEmpty()) {
             Pair<NetworkMessage, InetSocketAddress> message = receivedMessages.pollFirst();
@@ -93,8 +108,14 @@ public class Server extends ChatActor {
                     try {
                         if (!bannedClients.containsKey(message.getValue())) {
                             if (!clients.containsKey(message.getValue())) {
+                                for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
+                                    SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.CONNECT, message.getKey().getMessage());
+                                }
                                 SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "Success");
                                 clients.put(message.getValue(), message.getKey().getMessage());
+                                for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
+                                    SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.CONNECT, entry.getValue());
+                                }
 
                             } else {
                                 SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've already connected");
@@ -125,6 +146,9 @@ public class Server extends ChatActor {
                             return networkMessageInetSocketAddressPair.getKey().getMessageId() == id;
                         }
                     });
+                    break;
+                case DISCONNECT:
+
                     break;
             }
             executedMessages.add(message);
