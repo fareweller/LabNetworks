@@ -28,7 +28,7 @@ public abstract class ChatActor implements Runnable {
     protected TimerTask sendTask = null;
 
     public ChatActor(int port) throws UnknownHostException, SocketException{
-        socket = new DatagramSocket(port, InetAddress.getLocalHost());
+        socket = new DatagramSocket(port);
         this.port = port;
         isRunning = true;
         isReceiving = true;
@@ -47,7 +47,8 @@ public abstract class ChatActor implements Runnable {
     public void turnOff() throws IOException {
         executeAll();
         isRunning = false;
-        timer.cancel();
+        if (timer != null)
+            timer.cancel();
         socket.close();
     }
 

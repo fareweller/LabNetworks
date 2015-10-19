@@ -19,7 +19,8 @@ public class ClientGui extends Application {
     private VBox rootLayout = null;
 
     private Client client = null;
-    private ObservableList<String> receivedMessaged = FXCollections.observableArrayList();
+
+    private ObservableList<String> receivedMessages = FXCollections.observableArrayList();
     private ObservableList<String> connectedClients = FXCollections.observableArrayList();
 
     public static void Main(String args[]) {
@@ -68,8 +69,8 @@ public class ClientGui extends Application {
         return client;
     }
 
-    public ObservableList<String> getReceivedMessaged() {
-        return receivedMessaged;
+    public ObservableList<String> getReceivedMessages() {
+        return receivedMessages;
     }
 
     public ObservableList<String> getConnectedClients() {

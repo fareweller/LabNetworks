@@ -49,13 +49,13 @@ public class Controller {
             app.getClient().connectToServer(InetAddress.getByName(serverIP), p, name);
         }
         catch (NumberFormatException e) {
-
+            e.printStackTrace();
         }
         catch (UnknownHostException e) {
-
+            e.printStackTrace();
         }
         catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -73,7 +73,7 @@ public class Controller {
     public void setMain(ClientGui app) {
         this.app = app;
         clientsListView.setItems(app.getConnectedClients());
-        messagesListView.setItems(app.getReceivedMessaged());
+        messagesListView.setItems(app.getReceivedMessages());
         sendMessageButton.disableProperty().bindBidirectional(app.getClient().isNotConnected());
     }
 }

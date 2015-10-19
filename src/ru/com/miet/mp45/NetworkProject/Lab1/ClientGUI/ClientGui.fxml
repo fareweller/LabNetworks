@@ -18,7 +18,8 @@
               <items>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">
                      <children>
-                        <ListView layoutX="-29.0" layoutY="-3.0" prefHeight="Infinity" prefWidth="Infinity" fx:id="clientsListView"/>
+                        <ListView prefHeight="250" prefWidth="250" fx:id="clientsListView"/>
+                        <!--ListView layoutX="-29.0" layoutY="-3.0" prefHeight="Infinity" prefWidth="Infinity" fx:id="clientsListView"/-->
                      </children>
                 </AnchorPane>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">

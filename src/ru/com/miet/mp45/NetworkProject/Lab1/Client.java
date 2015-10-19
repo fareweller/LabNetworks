@@ -29,10 +29,10 @@ public class Client extends ChatActor {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                clientGui.getReceivedMessaged().add(message);
+                clientGui.getReceivedMessages().add(message);
+                System.out.println(message);
             }
         });
-        //System.out.println(message);
     }
 
     public void addClientToGUIList(final String name) {
@@ -41,9 +41,9 @@ public class Client extends ChatActor {
             @Override
             public void run() {
                 clientGui.getConnectedClients().add(name);
+                System.out.println(name + " has been connected");
             }
         });
-        //System.out.println(name + " has been connected");
     }
 
     public void removeClientFromGUIList(final String name) {
@@ -99,7 +99,8 @@ public class Client extends ChatActor {
             public void run() {
                 executeHeadMessage();
             }
-    };
+        };
+
         sendTask = new TimerTask() {
         @Override
             public void run() {
@@ -128,9 +129,9 @@ public class Client extends ChatActor {
         notConnected.setValue(false);
         SendMessage(serverAddress, NetworkMessage.TypeOfMessage.DISCONNECT, "");
         isReceiving = false;
+        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
         timer.cancel();
         timer = null;
-        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
         serverAddress = null;
         sendingMessages = null;
         receivedMessages = null;

@@ -15,7 +15,6 @@ public class Server extends ChatActor {
 
     public Server(int port) throws UnknownHostException, SocketException {
         super(port);
-
         sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
             @Override
             public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
