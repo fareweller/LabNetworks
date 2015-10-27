@@ -16,6 +16,7 @@ import java.util.function.Predicate;
  */
 public class Client extends ChatActor {
     private InetSocketAddress serverAddress = null;
+    private BooleanProperty connected = new SimpleBooleanProperty(false);
     private BooleanProperty notConnected = new SimpleBooleanProperty(true);
     private ClientGui clientGui = null;
 
@@ -127,6 +128,7 @@ public class Client extends ChatActor {
         if (notConnected.getValue())
             return;
         notConnected.setValue(false);
+        connected.setValue(true);
         SendMessage(serverAddress, NetworkMessage.TypeOfMessage.DISCONNECT, "");
         isReceiving = false;
         while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
@@ -136,6 +138,10 @@ public class Client extends ChatActor {
         sendingMessages = null;
         receivedMessages = null;
         executedMessages = null;
+    }
+
+    public void disconnectFromServer() throws IOException {
+        executeAll();
     }
 
     public void sendString(String str) {
@@ -169,6 +175,7 @@ public class Client extends ChatActor {
                     if (message.getKey().getMessage().equals("Success")) {
                         sendMessageToGUI("You've connected");
                         notConnected.setValue(false);
+                        connected.setValue(true);
                     } else {
                         if (message.getKey().getMessage().equals("You've banned")) {
                             serverAddress = null;
@@ -178,6 +185,7 @@ public class Client extends ChatActor {
                             clients = null;
                             timer.cancel();
                             notConnected.setValue(true);
+                            connected.setValue(false);
                         }
                         sendMessageToGUI(message.getKey().getMessage());
                     }
@@ -236,5 +244,8 @@ public class Client extends ChatActor {
 
     public BooleanProperty isNotConnected() {
         return notConnected;
+    }
+    public BooleanProperty isConnected() {
+        return connected;
     }
 }

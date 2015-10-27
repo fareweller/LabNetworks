@@ -6,7 +6,7 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import ru.com.miet.mp45.NetworkProject.Lab1.Client;
@@ -16,7 +16,7 @@ import java.io.IOException;
 public class ClientGui extends Application {
 
     private Stage primaryStage = null;
-    private VBox rootLayout = null;
+    private GridPane rootLayout = null;
 
     private Client client = null;
 
@@ -31,7 +31,6 @@ public class ClientGui extends Application {
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("Hail Satan!");
-        this.primaryStage.setResizable(false);
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
             fxmlLoader.setLocation(ClientGui.class.getResource("ClientGUI.fxml"));

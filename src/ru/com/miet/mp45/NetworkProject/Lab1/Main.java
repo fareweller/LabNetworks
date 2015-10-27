@@ -24,5 +24,7 @@ public class Main {
         }
         client.turnOff();
         server.turnOff();*/
+        Thread.sleep(60000);
+        server.turnOff();
     }
 }

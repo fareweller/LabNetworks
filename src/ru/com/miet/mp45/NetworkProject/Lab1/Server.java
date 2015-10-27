@@ -76,13 +76,13 @@ public class Server extends ChatActor {
     @Override
     public void executeAll() throws IOException {
         for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
-            SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.DISCONNECT, "Server");
+            SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.CLOSESERVER, "Server");
         }
         isReceiving = false;
-        timer.cancel();
-        timer = null;
         while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
 
+        timer.cancel();
+        timer = null;
         sendingMessages = null;
         receivedMessages = null;
         executedMessages = null;
@@ -152,6 +152,29 @@ public class Server extends ChatActor {
             }
             executedMessages.add(message);
         }
+    }
+//Change ban-unban functions form string argument to inetaddress argument
+    public void banClient(String nicknameToBan) throws IOException {
+        for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet() ) {
+            if (entry.getValue().equals(nicknameToBan)) {
+                bannedClients.put(entry.getKey(), entry.getValue());
+                clients.remove(entry.getKey());
+                for (Map.Entry<InetSocketAddress, String> entry1 : clients.entrySet()) {
+                    SendMessage(entry1.getKey(), NetworkMessage.TypeOfMessage.DISCONNECT, entry.getValue());
+                }
+                break;
+            }
+        }
+    }
+
+    public void unbanClient(String nicknameToUnban) {
+        for (Map.Entry<InetSocketAddress, String> entry : bannedClients.entrySet() ) {
+            if (entry.getValue().equals(nicknameToUnban)) {
+                bannedClients.remove(entry.getKey());
+                break;
+            }
+        }
+
     }
 
     @Override
