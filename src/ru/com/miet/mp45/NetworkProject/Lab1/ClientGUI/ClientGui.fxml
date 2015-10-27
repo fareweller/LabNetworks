@@ -10,36 +10,79 @@
 <?import javafx.scene.paint.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="399" prefWidth="638"  xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.Controller">
+<VBox prefHeight="399.0" prefWidth="638.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
   <children>
+    <MenuBar VBox.vgrow="NEVER">
+      <menus>
+        <Menu mnemonicParsing="false" text="File">
+          <items>
+            <MenuItem mnemonicParsing="false" text="New" />
+            <MenuItem mnemonicParsing="false" text="Open…" />
+            <Menu mnemonicParsing="false" text="Open Recent" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Close" />
+            <MenuItem mnemonicParsing="false" text="Save" />
+            <MenuItem mnemonicParsing="false" text="Save As…" />
+            <MenuItem mnemonicParsing="false" text="Revert" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Preferences…" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Quit" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Edit">
+          <items>
+            <MenuItem mnemonicParsing="false" text="Undo" />
+            <MenuItem mnemonicParsing="false" text="Redo" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Cut" />
+            <MenuItem mnemonicParsing="false" text="Copy" />
+            <MenuItem mnemonicParsing="false" text="Paste" />
+            <MenuItem mnemonicParsing="false" text="Delete" />
+            <SeparatorMenuItem mnemonicParsing="false" />
+            <MenuItem mnemonicParsing="false" text="Select All" />
+            <MenuItem mnemonicParsing="false" text="Unselect All" />
+          </items>
+        </Menu>
+        <Menu mnemonicParsing="false" text="Help">
+          <items>
+            <MenuItem mnemonicParsing="false" text="About MyHelloApp" />
+          </items>
+        </Menu>
+      </menus>
+         <effect>
+            <Glow />
+         </effect>
+         <VBox.margin>
+            <Insets />
+         </VBox.margin>
+    </MenuBar>
     <AnchorPane maxHeight="-1.0" maxWidth="-1.0" VBox.vgrow="ALWAYS">
       <children>
-            <SplitPane dividerPositions="0.22570532915360503" layoutY="-2.0" prefHeight="375.0" prefWidth="640.0">
+            <SplitPane dividerPositions="0.22570532915360503" layoutY="-2.0" prefHeight="373.0" prefWidth="640.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
               <items>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">
                      <children>
-                        <ListView prefHeight="250" prefWidth="250" fx:id="clientsListView"/>
-                        <!--ListView layoutX="-29.0" layoutY="-3.0" prefHeight="Infinity" prefWidth="Infinity" fx:id="clientsListView"/-->
-                     </children>
-                </AnchorPane>
+                        <ListView fx:id="usersList" layoutX="-29.0" layoutY="-3.0" prefHeight="371.0" prefWidth="141.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                     </children></AnchorPane>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">
                      <children>
-                        <VBox layoutX="-3.0" layoutY="2.0" prefHeight="375.0" prefWidth="491.0">
+                        <VBox layoutX="-3.0" layoutY="2.0" prefHeight="371.0" prefWidth="489.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <children>
                               <HBox alignment="TOP_RIGHT" prefHeight="29.0" prefWidth="450.0">
                                  <children>
-                                    <TextField promptText="Ваш ник" fx:id="nickNameField"/>
-                                    <TextField promptText="Введите ip" fx:id="serverIPField">
+                                    <TextField fx:id="nickField" promptText="Ваш ник" />
+                                    <TextField fx:id="ipField" promptText="Введите ip">
                                        <HBox.margin>
                                           <Insets right="2.0" />
                                        </HBox.margin>
                                     </TextField>
-                                    <TextField prefHeight="25.0" prefWidth="59.0" promptText="Порт" fx:id="serverPortField">
+                                    <TextField fx:id="portField" prefHeight="25.0" prefWidth="59.0" promptText="Порт">
                                        <HBox.margin>
                                           <Insets left="2.0" right="2.0" />
                                        </HBox.margin>
                                     </TextField>
-                                    <Button mnemonicParsing="false" text="Присоединиться" fx:id="connectToServerButton" onAction="#connectToServer">
+                                    <Button fx:id="connectButton" mnemonicParsing="false" text="Присоединиться">
                                        <HBox.margin>
                                           <Insets left="2.0" right="2.0" />
                                        </HBox.margin>
@@ -51,17 +94,17 @@
                               </HBox>
                               <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefViewportHeight="289.0" prefViewportWidth="491.0">
                                  <content>
-                                    <ListView prefHeight="289.0" prefWidth="491.0" fx:id="messagesListView"/>
+                                    <TextArea fx:id="chatingTextArea" prefHeight="289.0" prefWidth="491.0" wrapText="true" />
                                  </content>
                               </ScrollPane>
                               <HBox alignment="TOP_RIGHT" prefHeight="54.0" prefWidth="491.0">
                                  <children>
-                                    <TextField prefHeight="50.0" prefWidth="429.0" fx:id="messageField">
+                                    <TextField fx:id="sendMessageTextField" prefHeight="50.0" prefWidth="429.0">
                                        <HBox.margin>
                                           <Insets right="2.0" />
                                        </HBox.margin>
                                     </TextField>
-                                    <Button mnemonicParsing="false" prefHeight="49.0" prefWidth="52.0" text="Пыщь" fx:id="sendMessageButton" onAction="#sendMessage">
+                                    <Button fx:id="sendMessageButton" mnemonicParsing="false" prefHeight="49.0" prefWidth="52.0" text="Пыщь">
                                        <HBox.margin>
                                           <Insets left="2.0" />
                                        </HBox.margin>
@@ -79,8 +122,8 @@
             </SplitPane>
       </children>
     </AnchorPane>
-  </children><!--
+  </children>
   <stylesheets>
     <URL value="@gui.css" />
-  </stylesheets>-->
+  </stylesheets>
 </VBox>
