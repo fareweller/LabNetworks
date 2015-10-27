@@ -10,77 +10,44 @@
 <?import javafx.scene.paint.*?>
 <?import javafx.scene.text.*?>
 
-<VBox prefHeight="399" prefWidth="638"  xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.Controller">
-  <children>
-    <AnchorPane maxHeight="-1.0" maxWidth="-1.0" VBox.vgrow="ALWAYS">
-      <children>
-            <SplitPane dividerPositions="0.22570532915360503" layoutY="-2.0" prefHeight="375.0" prefWidth="640.0">
-              <items>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">
-                     <children>
-                        <ListView prefHeight="250" prefWidth="250" fx:id="clientsListView"/>
-                        <!--ListView layoutX="-29.0" layoutY="-3.0" prefHeight="Infinity" prefWidth="Infinity" fx:id="clientsListView"/-->
-                     </children>
-                </AnchorPane>
-                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="Infinity" prefWidth="Infinity">
-                     <children>
-                        <VBox layoutX="-3.0" layoutY="2.0" prefHeight="375.0" prefWidth="491.0">
-                           <children>
-                              <HBox alignment="TOP_RIGHT" prefHeight="29.0" prefWidth="450.0">
-                                 <children>
-                                    <TextField promptText="Ваш ник" fx:id="nickNameField"/>
-                                    <TextField promptText="Введите ip" fx:id="serverIPField">
-                                       <HBox.margin>
-                                          <Insets right="2.0" />
-                                       </HBox.margin>
-                                    </TextField>
-                                    <TextField prefHeight="25.0" prefWidth="59.0" promptText="Порт" fx:id="serverPortField">
-                                       <HBox.margin>
-                                          <Insets left="2.0" right="2.0" />
-                                       </HBox.margin>
-                                    </TextField>
-                                    <Button mnemonicParsing="false" text="Присоединиться" fx:id="connectToServerButton" onAction="#connectToServer">
-                                       <HBox.margin>
-                                          <Insets left="2.0" right="2.0" />
-                                       </HBox.margin>
-                                    </Button>
-                                 </children>
-                                 <padding>
-                                    <Insets bottom="2.0" top="2.0" />
-                                 </padding>
-                              </HBox>
-                              <ScrollPane fitToHeight="true" fitToWidth="true" hbarPolicy="NEVER" prefViewportHeight="289.0" prefViewportWidth="491.0">
-                                 <content>
-                                    <ListView prefHeight="289.0" prefWidth="491.0" fx:id="messagesListView"/>
-                                 </content>
-                              </ScrollPane>
-                              <HBox alignment="TOP_RIGHT" prefHeight="54.0" prefWidth="491.0">
-                                 <children>
-                                    <TextField prefHeight="50.0" prefWidth="429.0" fx:id="messageField">
-                                       <HBox.margin>
-                                          <Insets right="2.0" />
-                                       </HBox.margin>
-                                    </TextField>
-                                    <Button mnemonicParsing="false" prefHeight="49.0" prefWidth="52.0" text="Пыщь" fx:id="sendMessageButton" onAction="#sendMessage">
-                                       <HBox.margin>
-                                          <Insets left="2.0" />
-                                       </HBox.margin>
-                                    </Button>
-                                 </children>
-                                 <VBox.margin>
-                                    <Insets bottom="2.0" top="2.0" />
-                                 </VBox.margin>
-                              </HBox>
-                           </children>
-                        </VBox>
-                     </children>
-                  </AnchorPane>
-              </items>
-            </SplitPane>
-      </children>
-    </AnchorPane>
-  </children><!--
-  <stylesheets>
-    <URL value="@gui.css" />
-  </stylesheets>-->
-</VBox>
+
+<GridPane xmlns="http://javafx.com/javafx/8" prefWidth="700" prefHeight="400" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.Controller">
+   <rowConstraints>
+      <RowConstraints percentHeight="10" />
+      <RowConstraints percentHeight="80" />
+      <RowConstraints percentHeight="10" />
+   </rowConstraints>
+   <columnConstraints>
+      <ColumnConstraints percentWidth="33" />
+      <ColumnConstraints percentWidth="34" />
+      <ColumnConstraints percentWidth="33" />
+   </columnConstraints>
+   <ListView fx:id="clientsListView" prefWidth="Infinity" prefHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.rowSpan="3" />
+   <Button fx:id="sendMessageButton" text="Пыщь!" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="2" onAction="#sendMessage" />
+   <ListView fx:id="messagesListView" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2" />
+   <TextField fx:id="messageField" promptText="Введите сообщение" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+   <GridPane prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="0">
+       <rowConstraints>
+           <RowConstraints prefHeight="100" />
+       </rowConstraints>
+       <columnConstraints>
+           <ColumnConstraints percentWidth="50" />
+           <ColumnConstraints percentWidth="50" />
+       </columnConstraints>
+       <Button fx:id="connectToServerButton" text="Присоединиться" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" onAction="#connectToServer" />
+       <Button fx:id="disconnectFromServerButton" text="Отсоединиться" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" onAction="#disconnectFromServer" />
+   </GridPane>
+   <GridPane prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0">
+      <rowConstraints>
+          <RowConstraints percentHeight="100" />
+       </rowConstraints>
+       <columnConstraints>
+           <ColumnConstraints percentWidth="40" />
+           <ColumnConstraints percentWidth="40" />
+           <ColumnConstraints percentWidth="20" />
+       </columnConstraints>
+       <TextField fx:id="nickNameField" promptText="Никнейм" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+       <TextField fx:id="serverIPField" promptText="IP сервера" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+       <TextField fx:id="serverPortField" promptText="Порт" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+   </GridPane>
+</GridPane>
