@@ -3,6 +3,8 @@ package ru.com.miet.mp45.NetworkProject.Lab1;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.util.Pair;
 import ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.ClientGui;
 
@@ -19,6 +21,7 @@ public class Client extends ChatActor {
     private BooleanProperty connected = new SimpleBooleanProperty(false);
     private BooleanProperty notConnected = new SimpleBooleanProperty(true);
     private ClientGui clientGui = null;
+    private String nickname = null;
 
     public Client(int port, ClientGui gui) throws UnknownHostException, SocketException{
         super(port);
@@ -67,6 +70,7 @@ public class Client extends ChatActor {
     public void connectToServer(InetAddress address, int port, String name) throws IOException {
 
         serverAddress = new InetSocketAddress(address, port);
+        nickname = name;
 
         sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
             @Override
@@ -116,22 +120,30 @@ public class Client extends ChatActor {
             }
         });
 
+        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.REQUESTCONNECTION, name);
+
+        isReceiving = true;
         timer = new Timer();
         timer.schedule(executeTask, 100, 100);
         timer.schedule(sendTask, 100, 100);
-        isReceiving = true;
-        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.REQUESTCONNECTION, name);
     }
 
     @Override
     public void executeAll() throws IOException {
         if (notConnected.getValue())
             return;
-        notConnected.setValue(false);
-        connected.setValue(true);
-        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.DISCONNECT, "");
+        sendingMessages.clear();
+        receivedMessages.clear();
+        executedMessages.clear();
+        SendMessage(serverAddress, NetworkMessage.TypeOfMessage.DISCONNECT, nickname);
         isReceiving = false;
-        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
+        long cnt = 1000*1000*10;
+        while (cnt > 0 && (!receivedMessages.isEmpty() || !sendingMessages.isEmpty()))
+            cnt--;
+        if (sendingMessages.first().getKey().getType() == NetworkMessage.TypeOfMessage.DISCONNECT)
+            sendingMessages.pollFirst();
+        notConnected.setValue(true);
+        connected.setValue(false);
         timer.cancel();
         timer = null;
         serverAddress = null;
@@ -142,11 +154,18 @@ public class Client extends ChatActor {
 
     public void disconnectFromServer() throws IOException {
         executeAll();
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                clientGui.getConnectedClients().clear();
+            }
+        });
     }
 
     public void sendString(String str) {
         if (!notConnected.getValue() && serverAddress != null) {
             try {
+                str = nickname + ": " + str;
                 SendMessage(serverAddress, NetworkMessage.TypeOfMessage.MESSAGE, str);
             }
             catch (IOException e) {
@@ -157,7 +176,7 @@ public class Client extends ChatActor {
 
     @Override
     public void executeHeadMessage() {
-        if (!receivedMessages.isEmpty()) {
+        if (receivedMessages != null && !receivedMessages.isEmpty()) {
             Pair<NetworkMessage, InetSocketAddress> message = receivedMessages.pollFirst();
             if (message.getKey().getType() != NetworkMessage.TypeOfMessage.ACK) {
                 try {
@@ -178,12 +197,13 @@ public class Client extends ChatActor {
                         connected.setValue(true);
                     } else {
                         if (message.getKey().getMessage().equals("You've banned")) {
+                            timer.cancel();
+                            timer = null;
                             serverAddress = null;
                             sendingMessages = null;
                             receivedMessages = null;
                             executedMessages = null;
                             clients = null;
-                            timer.cancel();
                             notConnected.setValue(true);
                             connected.setValue(false);
                         }
@@ -196,9 +216,39 @@ public class Client extends ChatActor {
                 case DISCONNECT:
                     removeClientFromGUIList(message.getKey().getMessage());
                     break;
+                case CLOSESERVER:
+                    connected.setValue(false);
+                    notConnected.setValue(true);
+                    isReceiving = false;
+                    timer.cancel();
+                    timer = null;
+                    sendingMessages.clear();
+                    receivedMessages.clear();
+                    executedMessages.clear();
+                    sendingMessages = null;
+                    receivedMessages = null;
+                    executedMessages = null;
+                    serverAddress = null;
+                    sendMessageToGUI("Server is disconnected");
+                    return;
                 case MESSAGE:
                     sendMessageToGUI(message.getKey().getMessage());
                     break;
+                case BAN:
+                    connected.setValue(false);
+                    notConnected.setValue(true);
+                    isReceiving = false;
+                    sendingMessages.clear();
+                    receivedMessages.clear();
+                    executedMessages.clear();
+                    sendingMessages = null;
+                    receivedMessages = null;
+                    executedMessages = null;
+                    timer.cancel();
+                    timer = null;
+                    serverAddress = null;
+                    sendMessageToGUI("You've banned");
+                    return;
                 case ACK:
                     final long id = Long.parseLong(message.getKey().getMessage());
                     sendingMessages.removeIf(new Predicate<Pair<NetworkMessage, InetSocketAddress>>() {
@@ -220,7 +270,7 @@ public class Client extends ChatActor {
                 Pair<NetworkMessage, InetSocketAddress> message = sendingMessages.first();
 
                 if (!notConnected.getValue() && serverAddress.equals(message.getValue()) ||
-                    message.getKey().getType() == NetworkMessage.TypeOfMessage.REQUESTCONNECTION && serverAddress.equals(message.getValue())) {
+                        message.getKey().getType() == NetworkMessage.TypeOfMessage.REQUESTCONNECTION && serverAddress.equals(message.getValue())) {
                     DatagramPacket sendPacket =
                             new DatagramPacket(message.getKey().getBytes(), message.getKey().getBytes().length, message.getValue());
                     socket.send(sendPacket);

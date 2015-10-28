@@ -22,7 +22,7 @@ public class NetworkMessage {
         REQUESTCONNECTION(2),
         DISCONNECT(3),
         CONNECT(4),
-        NEWCLIENT(5),
+        BAN(5),
         CLOSESERVER(6),
         ACK(7);
         private final int value;

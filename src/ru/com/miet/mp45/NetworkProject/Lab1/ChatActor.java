@@ -61,8 +61,10 @@ public abstract class ChatActor implements Runnable {
                 socket.receive(receivePacket);
                 Pair<NetworkMessage, InetSocketAddress> msg = new Pair<NetworkMessage, InetSocketAddress>(new NetworkMessage(bytes),
                         new InetSocketAddress(receivePacket.getAddress(), receivePacket.getPort()));
-                if (isReceiving || msg.getKey().getType() == NetworkMessage.TypeOfMessage.ACK)
-                    receivedMessages.add(msg);
+                if (isReceiving || msg.getKey().getType() == NetworkMessage.TypeOfMessage.ACK) {
+                    if (receivedMessages != null)
+                        receivedMessages.add(msg);
+                }
             }
             catch (IOException e) {
 

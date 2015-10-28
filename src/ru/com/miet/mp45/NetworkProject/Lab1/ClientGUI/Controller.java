@@ -95,8 +95,12 @@ public class Controller {
         this.app = app;
         clientsListView.setItems(app.getConnectedClients());
         messagesListView.setItems(app.getReceivedMessages());
+        messageField.disableProperty().bindBidirectional(app.getClient().isNotConnected());
         sendMessageButton.disableProperty().bindBidirectional(app.getClient().isNotConnected());
         connectToServerButton.disableProperty().bindBidirectional(app.getClient().isConnected());
         disconnectFromServerButton.disableProperty().bindBidirectional(app.getClient().isNotConnected());
+        nickNameField.disableProperty().bindBidirectional(app.getClient().isConnected());
+        serverIPField.disableProperty().bindBidirectional(app.getClient().isConnected());
+        serverPortField.disableProperty().bindBidirectional(app.getClient().isConnected());
     }
 }

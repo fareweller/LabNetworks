@@ -139,12 +139,18 @@ public class Server extends ChatActor {
 
     @Override
     public void executeAll() throws IOException {
+        sendingMessages.clear();
+        receivedMessages.clear();
+        executedMessages.clear();
+
         for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
             SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.CLOSESERVER, "Server");
         }
-        isReceiving = false;
-        while (!receivedMessages.isEmpty() || !sendingMessages.isEmpty());
 
+        isReceiving = false;
+        long cnt = 1000*1000*10;
+        while (cnt > 0 && (!receivedMessages.isEmpty() || !sendingMessages.isEmpty()))
+            cnt--;
         timer.cancel();
         timer = null;
         sendingMessages = null;
@@ -154,7 +160,7 @@ public class Server extends ChatActor {
 
     @Override
     public void executeHeadMessage() {
-        if (!receivedMessages.isEmpty()) {
+        if (receivedMessages != null && !receivedMessages.isEmpty()) {
             Pair<NetworkMessage, InetSocketAddress> message = receivedMessages.pollFirst();
             if (message.getKey().getType() != NetworkMessage.TypeOfMessage.ACK) {
                 try {
@@ -212,6 +218,19 @@ public class Server extends ChatActor {
                     });
                     break;
                 case DISCONNECT:
+                    InetSocketAddress inetSocketAddress = null;
+                    for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
+                        try {
+                            if (!entry.getValue().equals(message.getKey().getMessage()))
+                                SendMessage(entry.getKey(), message.getKey().getType(), message.getKey().getMessage());
+                            else
+                                inetSocketAddress = entry.getKey();
+                        }
+                        catch (IOException e) {
+
+                        }
+                    }
+                    clients.remove(inetSocketAddress);
                     removeClientFromGUIList(message.getKey().getMessage());
                     break;
             }
@@ -222,6 +241,16 @@ public class Server extends ChatActor {
     public void banClient(String nicknameToBan) throws IOException {
         for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet() ) {
             if (entry.getValue().equals(nicknameToBan)) {
+                SendMessage(entry.getKey(), NetworkMessage.TypeOfMessage.BAN, "You've banned!");
+                while (sendingMessages.first().getKey().getType() != NetworkMessage.TypeOfMessage.BAN);
+                try {
+                    Thread.sleep(750);
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                if (sendingMessages.first().getKey().getType() == NetworkMessage.TypeOfMessage.BAN)
+                    sendingMessages.pollFirst();
                 bannedClients.put(entry.getKey(), entry.getValue());
                 clients.remove(entry.getKey());
                 for (Map.Entry<InetSocketAddress, String> entry1 : clients.entrySet()) {
