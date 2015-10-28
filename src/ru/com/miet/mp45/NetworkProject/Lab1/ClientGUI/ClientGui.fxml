@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.text.*?>
+
+
+<GridPane xmlns="http://javafx.com/javafx/8" prefWidth="700" prefHeight="400" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.com.miet.mp45.NetworkProject.Lab1.ClientGUI.Controller">
+   <rowConstraints>
+      <RowConstraints percentHeight="10" />
+      <RowConstraints percentHeight="80" />
+      <RowConstraints percentHeight="10" />
+   </rowConstraints>
+   <columnConstraints>
+      <ColumnConstraints percentWidth="33" />
+      <ColumnConstraints percentWidth="34" />
+      <ColumnConstraints percentWidth="33" />
+   </columnConstraints>
+   <ListView fx:id="clientsListView" prefWidth="Infinity" prefHeight="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.rowSpan="3" />
+   <Button fx:id="sendMessageButton" text="Пыщь!" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="2" onAction="#sendMessage" />
+   <ListView fx:id="messagesListView" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1" GridPane.columnSpan="2" />
+   <TextField fx:id="messageField" promptText="Введите сообщение" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+   <GridPane prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="0">
+       <rowConstraints>
+           <RowConstraints prefHeight="100" />
+       </rowConstraints>
+       <columnConstraints>
+           <ColumnConstraints percentWidth="50" />
+           <ColumnConstraints percentWidth="50" />
+       </columnConstraints>
+       <Button fx:id="connectToServerButton" text="Присоединиться" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" onAction="#connectToServer" />
+       <Button fx:id="disconnectFromServerButton" text="Отсоединиться" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" onAction="#disconnectFromServer" />
+   </GridPane>
+   <GridPane prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0">
+      <rowConstraints>
+          <RowConstraints percentHeight="100" />
+       </rowConstraints>
+       <columnConstraints>
+           <ColumnConstraints percentWidth="40" />
+           <ColumnConstraints percentWidth="40" />
+           <ColumnConstraints percentWidth="20" />
+       </columnConstraints>
+       <TextField fx:id="nickNameField" promptText="Никнейм" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+       <TextField fx:id="serverIPField" promptText="IP сервера" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+       <TextField fx:id="serverPortField" promptText="Порт" prefHeight="Infinity" prefWidth="Infinity" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+   </GridPane>
+</GridPane>
