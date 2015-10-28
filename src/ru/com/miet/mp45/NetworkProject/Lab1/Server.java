@@ -73,8 +73,8 @@ public class Server extends ChatActor {
         });
 
         timer = new Timer();
-        timer.schedule(executeTask, 100, 100);
-        timer.schedule(sendTask, 100, 100);
+        timer.schedule(executeTask, 50, 100);
+        timer.schedule(sendTask, 50, 100);
     }
 
     public Server(int port) throws UnknownHostException, SocketException {
@@ -148,9 +148,14 @@ public class Server extends ChatActor {
         }
 
         isReceiving = false;
-        long cnt = 1000*1000*10;
-        while (cnt > 0 && (!receivedMessages.isEmpty() || !sendingMessages.isEmpty()))
-            cnt--;
+        while (!sendingMessages.isEmpty()) {
+            long cnt = 1000*1000;
+            InetSocketAddress client = new InetSocketAddress(sendingMessages.first().getValue().getAddress(), sendingMessages.first().getValue().getPort());
+            while (cnt > 0 && (!receivedMessages.isEmpty() || !sendingMessages.isEmpty()))
+                cnt--;
+            if (sendingMessages.first().getValue().equals(client))
+                sendingMessages.pollFirst();
+        }
         timer.cancel();
         timer = null;
         sendingMessages = null;
