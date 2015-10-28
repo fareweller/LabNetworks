@@ -33,7 +33,7 @@ public class ClientGui extends Application {
         this.primaryStage.setTitle("Hail Satan!");
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            fxmlLoader.setLocation(ClientGui.class.getResource("ClientGUI.fxml"));
+            fxmlLoader.setLocation(ClientGui.class.getResource("ClientGui.fxml"));
             rootLayout = fxmlLoader.load();
 
             Scene scene = new Scene(rootLayout);

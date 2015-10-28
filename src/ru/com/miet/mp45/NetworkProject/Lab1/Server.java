@@ -1,6 +1,8 @@
 package ru.com.miet.mp45.NetworkProject.Lab1;
 
+import javafx.application.Platform;
 import javafx.util.Pair;
+import ru.com.miet.mp45.NetworkProject.Lab1.serverGui.ServerGui;
 
 import java.io.IOException;
 import java.net.*;
@@ -11,7 +13,69 @@ import java.util.function.Predicate;
  * Created by BALALAIKA on 24.09.2015.
  */
 public class Server extends ChatActor {
+    private ServerGui serverGui = null;
     protected Map<InetSocketAddress, String> bannedClients = null;
+
+    public Server(int port, ServerGui gui) throws UnknownHostException, SocketException {
+        super(port);
+        serverGui = gui;
+        sendingMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        receivedMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        executedMessages = new TreeSet<Pair<NetworkMessage, InetSocketAddress>>(new Comparator<Pair<NetworkMessage, InetSocketAddress>>() {
+            @Override
+            public int compare(Pair<NetworkMessage, InetSocketAddress> o1, Pair<NetworkMessage, InetSocketAddress> o2) {
+                if (o1.getKey().getMessageId() != o2.getKey().getMessageId())
+                    return Long.signum(o1.getKey().getMessageId() - o2.getKey().getMessageId());
+                return o1.getValue().toString().compareTo(o2.getValue().toString());
+            }
+        });
+
+        executeTask = new TimerTask() {
+            @Override
+            public void run() {
+                executeHeadMessage();
+            }
+        };
+        sendTask = new TimerTask() {
+            @Override
+            public void run() {
+                sendFirstMessage();
+            }
+        };
+
+        clients = new TreeMap<InetSocketAddress, String>(new Comparator<InetSocketAddress>() {
+            @Override
+            public int compare(InetSocketAddress o1, InetSocketAddress o2) {
+                return o1.getHostString().compareTo(o2.getHostString());
+            }
+        });
+        bannedClients = new TreeMap<InetSocketAddress, String>(new Comparator<InetSocketAddress>() {
+            @Override
+            public int compare(InetSocketAddress o1, InetSocketAddress o2) {
+                return o1.getHostString().compareTo(o2.getHostString());
+            }
+        });
+
+        timer = new Timer();
+        timer.schedule(executeTask, 100, 100);
+        timer.schedule(sendTask, 100, 100);
+    }
 
     public Server(int port) throws UnknownHostException, SocketException {
         super(port);
@@ -115,12 +179,13 @@ public class Server extends ChatActor {
                                 for (Map.Entry<InetSocketAddress, String> entry : clients.entrySet()) {
                                     SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.CONNECT, entry.getValue());
                                 }
-
+                                addClientToGUIList(message.getKey().getMessage());
                             } else {
                                 SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've already connected");
                             }
                         } else {
                             SendMessage(message.getValue(), NetworkMessage.TypeOfMessage.REQUESTCONNECTION, "You've banned!!!");
+                            addBannedClientToGUIList(message.getKey().getMessage());
                         }
                     }
                     catch (IOException e) {
@@ -147,7 +212,7 @@ public class Server extends ChatActor {
                     });
                     break;
                 case DISCONNECT:
-
+                    removeClientFromGUIList(message.getKey().getMessage());
                     break;
             }
             executedMessages.add(message);
@@ -165,6 +230,8 @@ public class Server extends ChatActor {
                 break;
             }
         }
+        removeClientFromGUIList(nicknameToBan);
+        addBannedClientToGUIList(nicknameToBan);
     }
 
     public void unbanClient(String nicknameToUnban) {
@@ -174,7 +241,7 @@ public class Server extends ChatActor {
                 break;
             }
         }
-
+        removeBannedClientFromGUIList(nicknameToUnban);
     }
 
     @Override
@@ -199,5 +266,58 @@ public class Server extends ChatActor {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void addClientToGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                serverGui.getConnectedClients().add(name);
+                System.out.println(name + " has been add to connected");
+            }
+        });
+    }
+    public void addBannedClientToGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                serverGui.getBannedClients().add(name);
+                System.out.println(name + " has been add to banned");
+            }
+        });
+    }
+    public void removeClientFromGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                serverGui.getConnectedClients().removeIf(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return s.equals(name);
+                    }
+                });
+            }
+        });
+
+        System.out.println(name + " has been removed from connected");
+    }
+    public void removeBannedClientFromGUIList(final String name) {
+
+        Platform.runLater(new Runnable() {
+            @Override
+            public void run() {
+                serverGui.getBannedClients().removeIf(new Predicate<String>() {
+                    @Override
+                    public boolean test(String s) {
+                        return s.equals(name);
+                    }
+                });
+            }
+        });
+
+        System.out.println(name + " has been removed from banned");
     }
 }
